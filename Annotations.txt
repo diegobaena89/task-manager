@@ -340,3 +340,82 @@ e assim que temos o salt, devemos gerar o password:
 quando queremos fazer o hash de algo, devemos fornecer 2 coisas: o valor que queremos 
 fazer o hash e em segundo o salt.
 
+
+JWT - JSON WEB TOKENS
+==================================================
+O JWT pode ser usado para autorização ou troca segura de informações entre partes, podendo ser 
+usado para autenticar se alguém é realmente quem afirma ser.
+
+UM JWT é consistido de 3 partes:
+
+1. o header => que contém os metadados sobre o token (tipo, hashing, etc)
+2. payload => contém as declarações, por exemplo, declarações sobre o uso de uma entidade,
+ - por exemplo, um usuário e quaisquer dados adicionais.
+3. signature => é o resultado do header codificado, o payload codificado por meio de um 
+algoritmo de hash unilateral com um secret ou uma private key. Signatures são derivadas do 
+cabeçalho e do payload.
+
+
+JSON Web Tokens podem ser decodificados por qualquer um. Eles não devem conter informações 
+sensíveis como senhas.
+É útil para o frontend e apps usarem esses tokens para alternar recursos condicionalmente.
+
+para começarmos a utilizar jwt, vamos utilizar o passport.js:
+
+```
+    yarn add @nestjs/jwt @nestjs/passport passport passport-jwt   
+```
+
+agora devemos inserir novos imports no auth.module:
+
+```
+    @Module({
+    imports: [
+        PassportModule.register({ defaultStrategy: 'jwt' }),
+        JwtModule.register({
+        secret: 'topSecret51',
+        signOptions: {
+            expiresIn: 3600,
+        },
+        }),
+        TypeOrmModule.forFeature([User]),
+    ],
+    providers: [AuthService, UserRepository],
+    controllers: [AuthController],
+    })
+    export class AuthModule {}
+```
+
+Após isso, fazemos uma injeção de dependências no nosso service do JwtService 
+para que possamos utilizá-lo na função de signIn:
+
+```
+  async signIn(
+    authCredentialsDTO: AuthCredentialsDto,
+  ): Promise<{ accessToken: string }> {
+    const { username, password } = authCredentialsDTO;
+
+    const user = await this.userRepository.findOneBy({ username });
+
+    if (user && (await bcrypt.compare(password, user.password))) {
+      const payload: JwtPayload = { username };
+      const accessToken: string = await this.jwtService.sign(payload);
+      return { accessToken };
+    } else {
+      throw new UnauthorizedException('Please check your login credentials');
+    }
+  }
+```
+
+
+além disso, precisaremos atualizar o auth.controller:
+
+```
+  @Post('/signin')
+  signIn(
+    @Body() authCredentialsDto: AuthCredentialsDto,
+  ): Promise<{ accessToken: string }> {
+    return this.authService.signIn(authCredentialsDto);
+  }
+```
+
