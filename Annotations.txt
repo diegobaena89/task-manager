@@ -253,3 +253,12 @@ da lib, que usamos desta maneira:
   }
 ```
 
+
+AUTHENTICATION
+==================================================
+Autenticação é quando desejamos identificar se alguém que afirma 
+ser quem realmente é. Autorização é quando permitimos que alguém tenha 
+um determinado acesso dependendo da sua identidade ou nível de 
+permissão.
+
+
