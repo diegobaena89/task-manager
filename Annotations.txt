@@ -314,3 +314,9 @@ e então podemos setar nosso users.repository.ts:
 service => lida com a lógica de negócio
 repository => lida com a interação com o banco de dados
 controller => pega os dados do FE e repassa para o service
+
+
+HASH
+==================================================
+Hash é uma função unilateral. Dada a mesma entrada, sempre produzirá o 
+mesmo resultado.
