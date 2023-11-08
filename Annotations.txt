@@ -1,0 +1,255 @@
+NEST.JS
+
+MÓDULOS
+==================================================
+Cada aplicação tem um módulo, ou seja, o ponto de início da aplicação.
+Módulos são uma maneira efetiva de organizar componentes por suas capacidades.
+É uma boa prática ter um folder por módulo, contendo os componentes dos
+módulos. Eles são Singletons, assim um módulo pode ser importado por outros 
+módulos.
+
+Criando um módulo:
+
+```
+    nest g module tasks
+```
+
+CONTROLLERS
+==================================================
+São responsáveis por encaminhar requisições e retornar respostas para o client.
+São atre3lados a um caminho específico e contém handlers, que lidam com endpoints 
+e métodos de requisições (GET, POST, PUT, PATCH, DELETE).
+Podem tirar vantagem das injeções de dependências para consumir providers 
+dentro de um mesmo módulo.
+
+* Handlers são métodos dentro da classe de controllers, com decorators como 
+@Get, @Post, @Delete, etc.
+
+Criando um controller:
+
+```
+    nest g controller tasks --no-spec
+```
+
+PROVIDERS
+==================================================
+Podem ser injetados emm construtores se forem decorados como um @Injectable, 
+via injeção de dependência. Também podem ser valores, uma classe, syn/async etc.
+Devem ser fornecidos para um módulo para que possam ser utilizados e exportados 
+de um módulos e, então, disponibilizados para outros módulos que os importem.
+
+O que é um service?
+Definidos como providers. São um conceito comum no desenvolvimento de software, 
+e podem ser implementados como Singletons quando envolvidos com o decorator 
+@Injectable e fornecido a um módulo. Isso significa que a mesma instância será 
+divida entre a aplicação, agindo como uma única fonte de verdade.
+
+O service é onde fica a raíz da lógica de negócio. Por exemplo, o service será chamado
+de um controller para validar os dados, criar um item na banco de dados e retornar 
+uma resposta.
+
+Criando um service:
+
+```
+    nest g service tasks --no-spec
+```
+
+DTO
+==================================================
+É um objeto que carrega dados entre os processos, ou seja, usado para encapsular 
+dados e mandá-los de uma aplicação para outra.
+Assim, é um objeto que define como os dados serão enviados entre o network.
+
+
+PIPES
+==================================================
+As pipes operamnos argumentos a serem processados pelo router handler,
+antes do handler se chamado e podem fazer transações de dados ou 
+a validação dos mesmos.
+Podem retornar um dado - original ou modificado - que será passado 
+através do router handler e também podem lançar Exceptions.
+
+* ValidationPipe => valida a compatibilidade de um objeto contra uma classe
+(vai bem com DTOs). Se alguma propriedade não pode ser mapeada propriamente,
+a validação falhará.
+
+* PerseIntPipe => Por padrão, os argumentos são do tipo string. Essa Pipe 
+valida que um argumento é um número. Caso tenha sucesso, o argumento é transformado 
+em Number e é passado para o handler.
+
+Pipes são classes com a notação do decorator @Injectable().
+
+```
+    yarn add class-validator class-transformer
+```
+
+Também precisamos avisar ao Nest.js que quando ele encontrar um decorator de 
+validação, queremos que ele acione a validationPipe.
+Da seguinte forme, no main.ts:
+
+```
+    import { NestFactory } from '@nestjs/core';
+    import { AppModule } from './app.module';
+    import { ValidationPipe } from '@nestjs/common';
+
+    async function bootstrap() {
+    const app = await NestFactory.create(AppModule);
+    app.useGlobalPipes(new ValidationPipe());
+    await app.listen(3000);
+    }
+    bootstrap();
+```
+
+Nosso dto ficou assim:
+```
+    import { IsNotEmpty } from 'class-validator';
+
+    export class CreateTaskDto {
+    @IsNotEmpty()
+    title: string;
+
+    @IsNotEmpty()
+    description: string;
+    }
+```
+
+DOCKER
+==================================================
+
+para rodar o postgres no docker, o comando é o seguinte:
+
+```
+    docker run --name postgres-nest -p 5432:5432 -e POSTGRES_PASSWORD=postgres -d postgres
+```
+
+Para parar o container:
+
+```
+    docker container stop <nome do container>
+```
+
+
+
+ORM
+==================================================
+
+Object Relational Mapping é uma técnica que nos permite criar queries
+e manipular dados de um banco de dados usando o paradigma de 
+orientação a objetos.
+
+O TypeORM é uma lib que roda no node.js e é usada com 
+javascript ou typescript. NOs ajuda a definir e gerenciar entidades,
+repositórios, colunas, relações, replicações, indices, queries, 
+logging e muito mais.
+
+
+conexão com o banco de dados
+==================================================
+
+instalar os pacotes:
+
+```
+    yarn add typeorm @nestjs/typeorm pg
+```
+
+Adicionar a configuração no app.module.ts
+
+```
+    import { Module } from '@nestjs/common';
+    import { TasksModule } from './tasks/tasks.module';
+    import { TypeOrmModule } from '@nestjs/typeorm';
+
+    @Module({
+    imports: [
+        TasksModule,
+        TypeOrmModule.forRoot({
+        type: 'postgres',
+        host: 'localhost',
+        port: 5432,
+        username: 'postgres',
+        password: '087cd313',
+        database: 'task-management',
+        autoLoadEntities: true,
+        synchronize: true,
+        }),
+    ],
+    })
+    export class AppModule {}
+```
+
+
+
+CRIANDO ENTITIES
+==================================================
+
+Nós definimos entidades utilizando classes e, além disso, devemos utilizar
+o decorator @Entity() do typeorm para classificá-la não como uma classe 
+comum, mas como uma Entity.
+
+No corpo da classe, podemos definir algumas propriedades que podem ser traduzidas 
+em colunas em nossa tabela de banco dados.
+
+```
+    import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+    import { TaskStatus } from './task.model';
+
+    @Entity()
+    export class Task {
+    @PrimaryGeneratedColumn('uuid') // gera o id para nossa classe
+    id: string;
+
+    @Column()
+    title: string;
+
+    @Column()
+    description: string;
+
+    @Column()
+    status: TaskStatus;
+    }
+```
+
+REPOSITORY
+==================================================
+O repositório também é uma classe, mas que precisa extender uma outra classe 
+especial do typeorm. ALém disso, precisamos defini-la como o modelo que 
+fizemos anteriormente na Entity, passando através do sinal <>.
+
+Também precisamos adicionar um import no modulo do componente:
+
+```
+    imports: [TypeOrmModule.forFeature([TasksRepository])],
+```
+
+Essa linha de código nos permite injetar a dependência que precisamos no módulo.
+
+A primeira coisa que precisamos fazer para criar uma query é fazer uma injeção 
+de dependência, precisamos injetar o Repository no service porque é ali onde 
+faremos as chamas do Repository.
+
+```
+    @Injectable()
+    export class TasksService {
+    constructor(
+        @InjectRepository(TasksRepository)
+        private tasksRepository: TasksRepository,
+    ) {}
+```
+
+Sempre que interagirmos com o banco de dados, estamos lidando com uma operação
+assíncrona.
+Para usarmos o typeORM para fazermos um GET/:id, temos uma operação específica 
+da lib, que usamos desta maneira:
+
+```
+    async getTaskById(id: string): Promise<Task> {
+        const found = await this.tasksRepository.findOne({ where: { id } });
+
+        if (!found) {
+        throw new NotFoundException(`Task with ID "${id}" not found`);
+        }
+
+        return found;
+  }
+```
+
