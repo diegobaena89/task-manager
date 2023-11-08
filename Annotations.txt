@@ -320,3 +320,23 @@ HASH
 ==================================================
 Hash é uma função unilateral. Dada a mesma entrada, sempre produzirá o 
 mesmo resultado.
+
+para encriptarmos nosso password, devemos instalar o bcrypt
+
+yarn add bcrypt
+
+e importá-lo no nosso user.repository.ts. Após isso, devemos gerar o salt:
+
+```
+     const salt = await bcrypt.genSalt();
+```
+
+e assim que temos o salt, devemos gerar o password:
+
+```
+    const hashedPassword = await bcrypt.hash(password, salt);
+```
+
+quando queremos fazer o hash de algo, devemos fornecer 2 coisas: o valor que queremos 
+fazer o hash e em segundo o salt.
+
