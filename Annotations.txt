@@ -419,3 +419,72 @@ além disso, precisaremos atualizar o auth.controller:
   }
 ```
 
+RELATIONS WITH POSTRES
+==================================================
+para criarmos uma relaçao entre usuário e tarefa, devemos fazer da seguinte forma:
+
+1. precisamos definir a relação de 1 para muitos e muitos para 1
+
+user.entity.ts:
+
+
+```
+    import { Task } from 'src/tasks/task.entity';
+    import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+
+    @Entity()
+    export class User {
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
+
+    @Column({ unique: true })
+    username: string;
+
+    @Column()
+    password: string;
+
+    @OneToMany((_type) => Task, (task) => task.user, { eager: true })
+    tasks: Task[];
+    }
+```
+
+Devemos criar a propriedade que receberá essa chave com o decorator 
+'OneToMany() e precisamos fornecer algum dado para este decorator.
+1. o tipo da task
+2. como acessamos esse usuário do outro lado dessa relação
+3. eager: true
+
+na task.entity.ts:
+
+```
+    import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+    import { TaskStatus } from './task.status.enum';
+    import { User } from 'src/auth/user.entity';
+
+    @Entity()
+    export class Task {
+    @PrimaryGeneratedColumn('uuid') // gera o id para nossa classe
+    id: string;
+
+    @Column()
+    title: string;
+
+    @Column()
+    description: string;
+
+    @Column()
+    status: TaskStatus;
+
+    @ManyToOne((_type) => User, (user) => user.tasks, { eager: false })
+    user: User;
+    }
+```
+
+Quando temos uma relação, um dos lados dessa relação pode ser eager.
+ Quando eager está setado ocmo true, neste caso, o usuário, isso significa 
+ que sempre que você recuperar o objeto do banco de dados, sempre que buscamos 
+ o usuário, também buscaremos as tarefas com ele, ou seja, não temos que 
+ buscar manualmente em um banco de dados separado ou uma linha separada 
+ de código ou qualquer coisa. Ele sempre buscará automaticamente.
+
+ 
