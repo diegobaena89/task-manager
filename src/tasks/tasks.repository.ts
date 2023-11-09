@@ -54,20 +54,20 @@ export class TasksRepository extends Repository<Task> {
     return task;
   }
 
-  async deleteTask(id: string): Promise<void> {
-    const result = await this.delete(id);
+  async deleteTask(id: string, user: User): Promise<void> {
+    const result = await this.delete({ id, user });
 
     if (result.affected === 0) {
       throw new NotFoundException(`Task with ID ${id} not found.`);
     }
   }
 
-  // async updateTask(id: string, status: TaskStatus): Promise<Task> {
-  //   const task = await this.getTaskById(id);
+  async updateTask(id: string, status: TaskStatus, user: User): Promise<Task> {
+    const task = await this.getTaskById(id, user);
 
-  //   task.status = status;
-  //   await this.save(task);
+    task.status = status;
+    await this.save(task);
 
-  //   return task;
-  // }
+    return task;
+  }
 }
