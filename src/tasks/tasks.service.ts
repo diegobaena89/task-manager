@@ -14,23 +14,23 @@ export class TasksService {
     private tasksRepository: TasksRepository,
   ) {}
 
-  getTasks(filterDto: GetTasksFilterDto): Promise<Task[]> {
-    return this.tasksRepository.getTasks(filterDto);
+  getTasks(filterDto: GetTasksFilterDto, user: User): Promise<Task[]> {
+    return this.tasksRepository.getTasks(filterDto, user);
   }
 
   createTask(createTaskDto: CreateTaskDto, user: User): Promise<Task> {
     return this.tasksRepository.createTask(createTaskDto, user);
   }
 
-  getTaskById(id: string): Promise<Task> {
-    return this.tasksRepository.getTaskById(id);
+  getTaskById(id: string, user: User): Promise<Task> {
+    return this.tasksRepository.getTaskById(id, user);
   }
 
   deleteTask(id: string): Promise<void> {
     return this.tasksRepository.deleteTask(id);
   }
 
-  updateTaskStatus(id: string, status: TaskStatus): Promise<Task> {
-    return this.tasksRepository.updateTask(id, status);
-  }
+  // updateTaskStatus(id: string, status: TaskStatus): Promise<Task> {
+  //   return this.tasksRepository.updateTask(id, status);
+  // }
 }
