@@ -419,7 +419,7 @@ além disso, precisaremos atualizar o auth.controller:
   }
 ```
 
-RELATIONS WITH POSTRES
+RELATIONS WITH POSTGRES
 ==================================================
 para criarmos uma relaçao entre usuário e tarefa, devemos fazer da seguinte forma:
 
@@ -488,3 +488,55 @@ Quando temos uma relação, um dos lados dessa relação pode ser eager.
  de código ou qualquer coisa. Ele sempre buscará automaticamente.
 
  
+ LOGGING
+==================================================
+Os logs serve para entendermos se algo deu errado durante nossas operações, o que 
+aconteceu e quando aconteceu. Podemos aplicar os logs em diferentes níveis antes, durante e 
+depois de nossas operações.
+Tipos de logs para cada tipo de situação:
+
+* Log - FInalidades gerais de informações importantes
+* Warning - útil para problemas não tratados que não são fatais ou destrutivos
+* Error - Usado para problemas não tratados que são fatais ou destrutivos para o nosso 
+sistema, como por exemplo, quando falhamos ao salvar uma tarefa no banco de dados.
+* Debug - útil para informações que podem nos ajudar a depurar a lógica no caso 
+de um aviso na barra de erro e que se destina a desenvolvedores, por exemplo, registrar 
+o estado do aplicativo durante uma operação.
+* Verbose - fornecem insights sobre o comportamento do aplicativo. É considerado muita 
+informação.
+
+libs de logs: Bino, Bunyon ou Winston
+
+Definindo logs:
+
+Podemos fornecer um contexto para o nosso log de onde o possível erro/log 
+esta acontecendo:
+
+```
+    tasks.controller.ts:
+
+    private logger = new Logger('TasksController');
+```
+
+logando erros:
+
+```
+tasks.repository.ts:
+
+
+```
+    try {
+      const tasks = await query.getMany();
+      return tasks;
+    } catch (error) {
+      this.logger.error(
+        `Failed to get tasks for user "${
+          user.username
+        }". Filters: ${JSON.stringify(filterDto)}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException();
+    }
+  }
+```
+

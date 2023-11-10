@@ -1,5 +1,10 @@
 import { DataSource, Repository } from 'typeorm';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  Logger,
+  InternalServerErrorException,
+} from '@nestjs/common';
 
 import { CreateTaskDto } from './dto/create-task.dto';
 import { Task } from './task.entity';
@@ -9,6 +14,7 @@ import { User } from 'src/auth/user.entity';
 
 @Injectable()
 export class TasksRepository extends Repository<Task> {
+  private logger = new Logger('TasksRepository', { timestamp: true });
   constructor(private dataSource: DataSource) {
     super(Task, dataSource.createEntityManager());
   }
@@ -30,8 +36,18 @@ export class TasksRepository extends Repository<Task> {
       );
     }
 
-    const tasks = await query.getMany();
-    return tasks;
+    try {
+      const tasks = await query.getMany();
+      return tasks;
+    } catch (error) {
+      this.logger.error(
+        `Failed to get tasks for user "${
+          user.username
+        }". Filters: ${JSON.stringify(filterDto)}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException();
+    }
   }
 
   async getTaskById(id: string, user: User): Promise<Task> {
@@ -50,8 +66,19 @@ export class TasksRepository extends Repository<Task> {
       status: TaskStatus.OPEN,
       user,
     });
-    await this.save(task);
-    return task;
+
+    try {
+      await this.save(task);
+      return task;
+    } catch (error) {
+      this.logger.error(
+        `Failed to create a task for user "${
+          user.username
+        }". Data: ${JSON.stringify(createTaskDto)}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException();
+    }
   }
 
   async deleteTask(id: string, user: User): Promise<void> {
@@ -66,8 +93,18 @@ export class TasksRepository extends Repository<Task> {
     const task = await this.getTaskById(id, user);
 
     task.status = status;
-    await this.save(task);
+    try {
+      await this.save(task);
 
-    return task;
+      return task;
+    } catch (error) {
+      this.logger.error(
+        `Failed to update task with ID "${id}" for user "${
+          user.username
+        }". Data: ${JSON.stringify(task)}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException();
+    }
   }
 }
