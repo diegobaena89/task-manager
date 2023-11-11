@@ -36,15 +36,22 @@ class SignInPage extends Component {
   submit = async () => {
     this.setState({ errorMessage: null });
     const { username, password } = this.state;
-
+  
     try {
       await this.props.userStore.signin(username, password);
       window.location.hash = '/tasks';
     } catch (error) {
-      const errorMessage = error.response.data.message;
-      this.setState({ errorMessage });
+      if (error.response && error.response.data && error.response.data.message) {
+        const errorMessage = error.response.data.message;
+        this.setState({ errorMessage });
+      } else {
+        // Handle cases where response or data.message is not available
+        console.error("Error during sign in:", error);
+        this.setState({ errorMessage: "An error occurred during sign in." });
+      }
     }
   };
+  
 
   goToSignUp = () => {
     window.location.hash = '/signup';
