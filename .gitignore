@@ -36,3 +36,5 @@ lerna-debug.log*
 
 # Others
 Annotations.txt
+.env.stage.dev
+.env.stage.prod

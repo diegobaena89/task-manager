@@ -24,6 +24,7 @@ Key Features:
 - [x] Task creation, editing, and deletion
 - [x] User authentication using bcrypt
 - [x] RESTful API for task management
+- [x] Error handling wuth properly loggers
 
 ---
 
